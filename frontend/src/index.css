@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens (Tailwind CSS 4 configures the theme in CSS, not in JS).
+ * Palette: deep navy chrome, teal for forecast, slate for actual, amber/rose for
+ * shortfall, emerald for surplus. All text pairings below meet WCAG AA on the
+ * surfaces they are used on.
+ */
+@theme {
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+
+  --color-ink-950: #071a2f;
+  --color-ink-900: #0b2545;
+  --color-ink-800: #13315c;
+  --color-ink-700: #1d3f6e;
+
+  --color-brand-600: #0e7490;
+  --color-brand-700: #0b5d75;
+  --color-brand-500: #0d8aa8;
+  --color-brand-100: #e0f2f7;
+
+  --color-forecast: #0e7490;
+  --color-forecast-soft: #7dd3e0;
+  --color-actual: #334155;
+  --color-actual-soft: #94a3b8;
+
+  --color-shortfall: #b45309;
+  --color-shortfall-soft: #fcd9a6;
+  --color-surplus: #047857;
+  --color-surplus-soft: #b7e8d3;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  @apply bg-slate-100 text-slate-900 antialiased;
+  font-family: var(--font-sans);
+}
+
+/* Consistent, visible keyboard focus everywhere. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Screen-reader-only utility used for chart summaries and skip links. */
+.sr-only-focusable:not(:focus):not(:focus-within) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Recharts renders an SVG; keep hover cursors subtle. */
+.recharts-wrapper :where(.recharts-surface):focus {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

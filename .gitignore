@@ -1,0 +1,42 @@
+# environments
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# secrets and local config
+.env
+backend/.env
+*.local
+
+# artefacts
+logs/
+data/raw/
+htmlcov/
+.coverage
+coverage.xml
+backend/coverage.xml
+dist/
+node_modules/
+
+# editors / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Environment files
+**/.env
+**/.env.*
+!**/.env.example
+
+# Frontend build output
+frontend/dist/
+
+# Python virtual environments
+venv/
+# Playwright generated files
+frontend/test-results/
+frontend/playwright-report/

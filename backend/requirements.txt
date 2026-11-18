@@ -1,0 +1,15 @@
+# Runtime dependencies — pinned to the versions this backend was tested against.
+# Python 3.12 (verified on 3.12.10). MySQL 8.0.46 via PyMySQL.
+fastapi==0.163.1
+uvicorn[standard]==0.54.0
+SQLAlchemy==2.0.57
+PyMySQL==1.2.4
+cryptography==50.0.2
+pydantic==2.14.3
+pydantic-settings==2.16.3
+python-dotenv==1.2.4
+httpx==0.28.1
+pandas==2.3.3
+numpy==2.5.5
+alembic==1.20.1
+tzdata==2026.6

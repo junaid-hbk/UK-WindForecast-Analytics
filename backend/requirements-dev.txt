@@ -1,0 +1,4 @@
+# Test and quality tooling. Not installed into the production image.
+-r requirements.txt
+pytest==8.4.2
+pytest-cov==7.1.0
