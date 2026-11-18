@@ -28,7 +28,7 @@ services:
       context: ./backend
     command: ["alembic", "upgrade", "head"]
     environment:
-      DATABASE_URL: mysql+pymysql://${MYSQL_USER:-windpulse}:${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}@db:3306/${MYSQL_DATABASE:-windpulse}?charset=utf8mb4
+      DATABASE_URL: mysql+pymysql://${MYSQL_USER:-windpulse}:${MYSQL_PASSWORD_URLENCODED:?Set MYSQL_PASSWORD_URLENCODED in .env}@db:3306/${MYSQL_DATABASE:-windpulse}?charset=utf8mb4
     depends_on:
       db:
         condition: service_healthy
@@ -38,12 +38,12 @@ services:
     build:
       context: ./backend
     environment:
-      DATABASE_URL: mysql+pymysql://${MYSQL_USER:-windpulse}:${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}@db:3306/${MYSQL_DATABASE:-windpulse}?charset=utf8mb4
+      DATABASE_URL: mysql+pymysql://${MYSQL_USER:-windpulse}:${MYSQL_PASSWORD_URLENCODED:?Set MYSQL_PASSWORD_URLENCODED in .env}@db:3306/${MYSQL_DATABASE:-windpulse}?charset=utf8mb4
       ENVIRONMENT: development
       ADMIN_TOKEN: ${ADMIN_TOKEN:-}
       CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:8001:8000"
     depends_on:
       migrate:
         condition: service_completed_successfully

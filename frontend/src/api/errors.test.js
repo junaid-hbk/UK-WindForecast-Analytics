@@ -7,7 +7,7 @@ describe('ApiError.fromAxios', () => {
     const error = ApiError.fromAxios({ message: 'Network Error' })
     expect(error.code).toBe(ERROR_CODES.NETWORK_ERROR)
     expect(error.message).toContain('Cannot reach the WindPulse API')
-    expect(error.message).toContain('127.0.0.1:8000/api/v1')
+    expect(error.message).toContain('127.0.0.1:8001/api/v1')
   })
 
   it('maps a timeout', () => {
