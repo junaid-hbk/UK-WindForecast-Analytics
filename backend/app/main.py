@@ -1,5 +1,11 @@
+"""FastAPI application factory.
 
-"""FastAPI application factory."""
+Run locally with::
+
+    uvicorn app.main:app --reload --port 8000
+
+OpenAPI documentation is served at ``/docs`` and ``/openapi.json``.
+"""
 
 from __future__ import annotations
 
@@ -53,21 +59,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-
-        # Temporary Render CA diagnostic
-        ca_path = Path("/etc/secrets/ca.pem")
-
-        if ca_path.is_file():
-            ca_bytes = ca_path.read_bytes()
-            fingerprint = hashlib.sha256(ca_bytes).hexdigest()
-            print(
-                f"RENDER_CA_CHECK exists=true "
-                f"size={len(ca_bytes)} sha256={fingerprint}",
-                flush=True,
-            )
-        else:
-            print("RENDER_CA_CHECK exists=false", flush=True)
-
         logger.info(
             "application_startup",
             extra={
@@ -79,6 +70,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
 
         yield
+
         logger.info("application_shutdown")
 
     app = FastAPI(
