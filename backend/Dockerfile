@@ -9,7 +9,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install curl for health checks
+# Install curl
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
@@ -18,22 +18,22 @@ RUN apt-get update \
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend application files
+# Copy backend files
 COPY alembic.ini ./
 COPY alembic ./alembic
 COPY app ./app
 
-# Create non-root user and grant access to Render secret files
-RUN useradd --create-home --uid 10001 appuser \
-    && usermod -a -G 1000 appuser \
+# Create group 1000 and non-root application user
+RUN groupadd --gid 1000 render-group \
+    && useradd --create-home --uid 10001 --gid 1000 appuser \
     && chown -R appuser:appuser /app
 
+# Run as non-root user
 USER appuser
 
-# Render provides the PORT environment variable
 EXPOSE 10000
 
-# Docker HEALTHCHECK: use CMD, not CMD-SHELL
+# Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD curl -fsS "http://127.0.0.1:${PORT:-8000}/api/v1/health" || exit 1
 
