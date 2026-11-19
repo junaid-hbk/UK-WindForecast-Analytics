@@ -1,13 +1,5 @@
-"""Engine and session management for MySQL (SQLAlchemy 2 + PyMySQL).
 
-Conventions enforced here:
-
-* the connection time zone is pinned to UTC, so ``CURRENT_TIMESTAMP`` defaults
-  and ``UTC_TIMESTAMP()`` produce the same values regardless of the client host;
-* ``pool_pre_ping`` avoids serving stale connections after a managed-MySQL
-  failover or a container restart;
-* sessions are created per request/CLI command and closed deterministically.
-"""
+"""Engine and session management for MySQL (SQLAlchemy 2 + PyMySQL)."""
 
 from __future__ import annotations
 
@@ -21,7 +13,13 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.core.config import get_settings
 
 
-def _pin_session_timezone(dbapi_connection: object, _connection_record: object) -> None:
+CA_CERT_PATH = "/etc/secrets/ca.pem"
+
+
+def _pin_session_timezone(
+    dbapi_connection: object,
+    _connection_record: object,
+) -> None:
     """Force every new DB-API connection into UTC."""
     cursor = dbapi_connection.cursor()  # type: ignore[attr-defined]
     try:
@@ -30,8 +28,15 @@ def _pin_session_timezone(dbapi_connection: object, _connection_record: object) 
         cursor.close()
 
 
-def build_engine(url: str, *, pool_size: int = 5, recycle: int = 1800, echo: bool = False) -> Engine:
-    """Create a MySQL engine with project-standard settings."""
+def build_engine(
+    url: str,
+    *,
+    pool_size: int = 5,
+    recycle: int = 1800,
+    echo: bool = False,
+) -> Engine:
+    """Create a MySQL engine with verified Aiven SSL."""
+
     engine = create_engine(
         url,
         pool_pre_ping=True,
@@ -40,8 +45,16 @@ def build_engine(url: str, *, pool_size: int = 5, recycle: int = 1800, echo: boo
         max_overflow=pool_size,
         echo=echo,
         future=True,
+        connect_args={
+            "ssl_ca": CA_CERT_PATH,
+            "ssl_verify_cert": True,
+            "ssl_verify_identity": True,
+            "connect_timeout": 15,
+        },
     )
+
     event.listen(engine, "connect", _pin_session_timezone)
+
     return engine
 
 
@@ -49,6 +62,7 @@ def build_engine(url: str, *, pool_size: int = 5, recycle: int = 1800, echo: boo
 def get_engine() -> Engine:
     """Process-wide engine built from settings."""
     settings = get_settings()
+
     return build_engine(
         settings.database_url,
         pool_size=settings.database_pool_size,
@@ -69,12 +83,9 @@ def get_session_factory() -> sessionmaker[Session]:
 
 
 def get_session() -> Iterator[Session]:
-    """FastAPI dependency: one session per request, committed on success.
-
-    The route/service layer flushes; this dependency owns the commit boundary, so
-    a failure anywhere in the request rolls the whole unit of work back.
-    """
+    """FastAPI dependency: one session per request."""
     session = get_session_factory()()
+
     try:
         yield session
         session.commit()
@@ -87,8 +98,9 @@ def get_session() -> Iterator[Session]:
 
 @contextmanager
 def session_scope() -> Iterator[Session]:
-    """Context manager with an explicit commit/rollback boundary (CLI, services)."""
+    """Context manager with an explicit commit/rollback boundary."""
     session = get_session_factory()()
+
     try:
         yield session
         session.commit()
