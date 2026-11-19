@@ -1,14 +1,10 @@
-"""FastAPI application factory.
 
-Run locally with::
-
-    uvicorn app.main:app --reload --port 8000
-
-OpenAPI documentation is served at ``/docs`` and ``/openapi.json``.
-"""
+"""FastAPI application factory."""
 
 from __future__ import annotations
 
+import hashlib
+from pathlib import Path
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
@@ -29,12 +25,12 @@ Data provenance: Elexon BMRS Insights API — `FUELHH` (actual half-hourly wind 
 `fuelType=WIND`) and `WINDFOR` (hourly national wind forecast, every publication vintage
 preserved).
 
-Method: each delivery interval is paired with the **latest forecast vintage published at or
-before the configured day-ahead decision cutoff**. Forecasts published after the cutoff are
-never used. Accuracy metrics exclude missing observations and report them; no missing value is
-ever replaced by zero.
+Method: each delivery interval is paired with the latest forecast vintage published at or
+before the configured day-ahead decision cutoff. Forecasts published after the cutoff are
+never used. Accuracy metrics exclude missing observations and report them; no missing value
+is ever replaced by zero.
 
-The procurement endpoint is an **illustrative arithmetic estimate**, not a purchasing
+The procurement endpoint is an illustrative arithmetic estimate, not a purchasing
 recommendation.
 """.strip()
 
@@ -57,6 +53,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+
+        # Temporary Render CA diagnostic
+        ca_path = Path("/etc/secrets/ca.pem")
+
+        if ca_path.is_file():
+            ca_bytes = ca_path.read_bytes()
+            fingerprint = hashlib.sha256(ca_bytes).hexdigest()
+            print(
+                f"RENDER_CA_CHECK exists=true "
+                f"size={len(ca_bytes)} sha256={fingerprint}",
+                flush=True,
+            )
+        else:
+            print("RENDER_CA_CHECK exists=false", flush=True)
+
         logger.info(
             "application_startup",
             extra={
@@ -66,6 +77,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 "admin_enabled": resolved.admin_enabled,
             },
         )
+
         yield
         logger.info("application_shutdown")
 
@@ -86,11 +98,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         max_age=600,
     )
 
-    # Make the settings this factory was given authoritative for every
-    # dependency too. Without this, routes would resolve the cached
-    # ``get_settings()`` singleton, so an app built with explicit settings (as
-    # tests and embedded deployments do) would silently use the environment's
-    # values for CORS, admin token, page limits and the database URL.
     app.dependency_overrides[get_settings] = lambda: resolved
 
     register_exception_handlers(app)
